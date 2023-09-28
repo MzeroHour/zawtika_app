@@ -1,0 +1,93 @@
+import 'package:flutter/material.dart';
+import 'package:zawtika/app_config/my_theme.dart';
+import 'package:zawtika/custom/device_info.dart';
+
+class AuthScreen {
+  static Widget buildScreen(
+      BuildContext context, String headerText, String hologram, Widget child) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          Container(
+            height: DeviceInfo(context).height!,
+            width: DeviceInfo(context).width,
+            color: MyTheme.white,
+            // child: Image.asset(
+            //   "assets/background_1.png",
+            //   fit: BoxFit.cover,
+            // ),
+          ),
+          Positioned(
+            top: 180,
+            child: Image.asset(
+              'assets/images/pattern.png',
+            ),
+          ),
+          Container(
+            color: MyTheme.accent_color,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics()),
+              slivers: [
+                SliverList(
+                  delegate: SliverChildListDelegate(
+                    [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 100.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: Image.asset('assets/images/logo.png'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(
+                          headerText,
+                          style: TextStyle(
+                              color: MyTheme.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: Text(
+                          hologram,
+                          style: TextStyle(
+                              color: MyTheme.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(top: 110),
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topRight: Radius.circular(20.0),
+                            topLeft: Radius.circular(20.0),
+                          ),
+                        ),
+                        child: child,
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
