@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zawtika/app_config/my_theme.dart';
+import 'package:zawtika/screen/home_screen.dart';
 import 'package:zawtika/screen/order_list_screen.dart';
 
 import '../../data_model/api_response.dart';
@@ -108,7 +109,19 @@ class _MyDrawerState extends State<MyDrawer> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => OrderListScreen(),
+                    builder: (context) => HomePage(),
+                  ));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.list_alt_sharp),
+            title: const Text('Order List'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const OrderListScreen(),
                   ));
             },
           ),
@@ -117,6 +130,22 @@ class _MyDrawerState extends State<MyDrawer> {
             title: const Text('Settings'),
             onTap: () {
               Navigator.pop(context); // Close the Drawer
+            },
+          ),
+          ListTile(
+            leading: const Icon(
+              FontAwesomeIcons.powerOff,
+              size: 20,
+            ),
+            title: const Text('Logout'),
+            onTap: () async {
+              Navigator.pop(context);
+              await AuthRepository().logout();
+              // ignore: use_build_context_synchronously
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+                (route) => false,
+              );
             },
           ),
         ],

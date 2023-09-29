@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:zawtika/app_config/my_theme.dart';
 import 'package:zawtika/custom/toast_message.dart';
 import 'package:zawtika/repository/order_repository.dart';
 
@@ -18,32 +20,106 @@ class _OrderListScreenState extends State<OrderListScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _loading = true;
   List<dynamic> _orderList = [];
+  double totalPrice = 0;
+  int totalKyat = 0;
+  int totalPae = 0;
+  int totalYway = 0;
+  var formatter = NumberFormat('#,##,000');
 
   // Get order list
   Future<void> getOrder() async {
+    int userId = await AuthRepository.getUserId();
     ApiResponse response = await getOrderAll();
     final String token = await AuthRepository.getToken();
 
     if (response.error == null && token.isNotEmpty) {
-      _orderList = response.data as List<dynamic>;
+      List orderList = response.data as List<dynamic>;
+      // _orderList = response.data as List<dynamic>;
+      _orderList =
+          orderList.where((orderData) => orderData.userId == userId).toList();
       setState(() {
         _loading = _loading ? !_loading : _loading;
+        if (_searchController.text.isNotEmpty) {
+          _orderList = _orderList
+              .where((productData) => productData.products.productName
+                  .toLowerCase()
+                  .contains(_searchController.text.toLowerCase()))
+              .toList();
+        }
       });
     } else {
       toastMessage('${response.error}', Colors.white, Colors.grey[600]!);
     }
   }
 
+  double calculateTotalPrice() {
+    double total = 0.0;
+    for (var order in _orderList) {
+      total += double.parse('${order.confirmPrice}');
+    }
+    return total;
+  }
+
+  int calculateTotalKyat() {
+    int total = 0;
+    for (var order in _orderList) {
+      total += int.parse('${order.products.kyat}');
+    }
+    return total;
+  }
+
+  int calculateTotalPae() {
+    int total = 0;
+    for (var order in _orderList) {
+      total += int.parse('${order.products.pae}');
+    }
+    return total;
+  }
+
+  int calculateTotalYway() {
+    int total = 0;
+    for (var order in _orderList) {
+      total += int.parse('${order.products.yway}');
+    }
+    return total;
+  }
+
   @override
   void initState() {
-    getOrder();
+    getOrder().then((value) {
+      setState(() {
+        totalPrice = calculateTotalPrice();
+        totalKyat = calculateTotalKyat();
+        totalPae = calculateTotalPae();
+        totalYway = calculateTotalYway();
+
+        // Convert Yway to Pae
+        int ywayToPae = totalYway ~/ 8;
+        totalPae += ywayToPae;
+        totalYway %= 8;
+
+        // Convert Pae to Kyat
+        int paeToKyat = totalPae ~/ 16;
+        totalKyat += paeToKyat;
+        totalPae %= 16;
+
+        print('Sum price $totalPrice');
+        print('Sum Kyat $totalKyat');
+        print('Sum Pae $totalPae');
+        print('Sum Yway $totalYway');
+      });
+    });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Orders List')),
+      appBar: AppBar(
+          elevation: 0.0,
+          title: const Text(
+            'Orders List',
+          )),
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(),
@@ -55,201 +131,154 @@ class _OrderListScreenState extends State<OrderListScreen> {
                 });
                 return getOrder();
               },
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      // Add padding around the search bar
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: TextField(
-                        style: const TextStyle(
-                          fontSize: 14,
-                        ),
-                        controller: _searchController,
-                        onChanged: (value) {
-                          getOrder();
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Search...',
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              getOrder();
-                            },
-                          ),
-                          prefixIcon: IconButton(
-                            icon: const Icon(Icons.search),
-                            onPressed: () {
-                              // Perform the search here
-                            },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20.0),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _orderList.length,
-                      itemBuilder: (context, index) {
-                        Order order = _orderList[index];
-                        DateTime dateTime = DateTime.parse(order.createAt!);
-                        String formattedOrderDate =
-                            DateFormat('y-MMM-d').format(dateTime);
-                        return InkWell(
-                          onTap: () {
-                            setState(() {});
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 3, horizontal: 5),
-                            child: Card(
-                              shape: RoundedRectangleBorder(
+              child: _orderList.isNotEmpty
+                  ? Column(
+                      children: [
+                        Container(
+                          decoration:
+                              BoxDecoration(color: MyTheme.splash_screen_color),
+                          padding: const EdgeInsets.only(
+                              top: 0, left: 15, right: 15, bottom: 15),
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: 50,
+                                child: TextField(
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                  ),
+                                  controller: _searchController,
+                                  onChanged: (value) {
+                                    getOrder();
+                                  },
+                                  decoration: InputDecoration(
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    hintText: 'Search...',
+                                    hintStyle: const TextStyle(
+                                      height: 4,
+                                    ),
+                                    suffixIcon: IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        getOrder();
+                                      },
+                                    ),
+                                    prefixIcon: IconButton(
+                                      icon: const Icon(Icons.search),
+                                      onPressed: () {
+                                        // Perform the search here
+                                      },
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20.0),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 15,
+                              ),
+                              Container(
+                                width: MediaQuery.of(context).size.width,
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(10),
-                                  side: const BorderSide(
-                                    color: Colors.black12,
-                                  )),
-                              child: Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      offset: const Offset(0, 5),
+                                      color: Colors.indigo.withOpacity(0.2),
+                                      spreadRadius: 2,
+                                      blurRadius: 5,
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
                                   children: [
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 5,
-                                        horizontal: 10,
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              const Text(
-                                                '#',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                              const SizedBox(
-                                                width: 10,
-                                              ),
-                                              Text(
-                                                '${order.products!.productName}',
-                                                style: const TextStyle(
-                                                  color: Colors.blue,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ],
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'စာရင်းရှိရွှေ',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
                                           ),
-                                          Text(
-                                            'Ks ${order.confirmPrice!.toString()}',
+                                        ),
+                                        Text(
+                                          'Ks  ${formatter.format(totalPrice)}',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 15,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.deepPurple[500],
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          child: Text(
+                                            '$totalKyat ကျပ်',
                                             style: const TextStyle(
-                                              height: 1.8,
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                          Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.date_range_outlined,
-                                                size: 15,
-                                                color: Colors.blue,
-                                              ),
-                                              const SizedBox(
-                                                width: 5,
-                                              ),
-                                              Text(
-                                                formattedOrderDate,
-                                                style: const TextStyle(
-                                                  height: 1.8,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(
-                                            height: 10,
-                                          ),
-                                          Row(
-                                            children: [
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 8,
-                                                        horizontal: 6),
-                                                decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                    border: Border.all(
-                                                      color: Colors.black,
-                                                      width: 2,
-                                                    )),
-                                                child: Text(
-                                                  'ggg',
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(
-                                                width: 8,
-                                              ),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 8,
-                                                        horizontal: 6),
-                                                decoration: BoxDecoration(
-                                                    color: Colors.grey.shade200,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                    border: Border.all(
-                                                      color: Colors.indigo,
-                                                      width: 2,
-                                                    )),
-                                                child: Text(
-                                                  'GGGG',
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 13,
-                                                    color: Colors.indigo,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                    Column(
-                                      children: [
-                                        Text(
-                                          'Ks ${order.confirmPrice.toString()}',
-                                          style: const TextStyle(
-                                            color: Colors.indigo,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18,
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          height: 20,
                                         ),
                                         Container(
-                                          width: 40,
-                                          height: 40,
-                                          decoration: const BoxDecoration(
-                                            color: Colors.grey,
-                                            shape: BoxShape.circle,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 15,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.greenAccent[700],
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          child: Text(
+                                            '$totalPae ပဲ',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 15,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber,
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          child: Text(
+                                            '$totalYway ရွေး',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -257,15 +286,272 @@ class _OrderListScreenState extends State<OrderListScreen> {
                                   ],
                                 ),
                               ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: _orderList.length,
+                            itemBuilder: (context, index) {
+                              Order order = _orderList[index];
+                              DateTime dateTime =
+                                  DateTime.parse(order.createAt!);
+                              String formattedOrderDate =
+                                  DateFormat('y-MMM-d').format(dateTime);
+                              return InkWell(
+                                onTap: () {
+                                  setState(() {});
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 2, horizontal: 5),
+                                  child: Card(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        side: BorderSide(
+                                          color: Colors.black.withOpacity(.08),
+                                        )),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Row(
+                                        children: [
+                                          order.products!.image!.isNotEmpty
+                                              ? SizedBox(
+                                                  height: 60,
+                                                  width: 60,
+                                                  child: CachedNetworkImage(
+                                                    imageUrl: order.products!
+                                                            .image![0].url ??
+                                                        '',
+                                                    fit: BoxFit.fitWidth,
+                                                    fadeInDuration:
+                                                        const Duration(
+                                                            seconds: 5),
+                                                    maxHeightDiskCache: 1000,
+                                                    imageBuilder: (context,
+                                                            imageProvider) =>
+                                                        Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(100),
+                                                        image: DecorationImage(
+                                                          image: imageProvider,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    progressIndicatorBuilder:
+                                                        (context, url,
+                                                            progress) {
+                                                      return ColoredBox(
+                                                        color: Colors.black12,
+                                                        child: Center(
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                                  value: progress
+                                                                      .progress),
+                                                        ),
+                                                      );
+                                                    },
+                                                    errorWidget:
+                                                        (context, url, error) =>
+                                                            const ColoredBox(
+                                                      color: Colors.grey,
+                                                      child: Icon(
+                                                        Icons.error_outline,
+                                                        size: 20,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )
+                                              : Container(
+                                                  height: 80,
+                                                  width: MediaQuery.of(context)
+                                                      .size
+                                                      .width,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                    color: Colors.grey,
+                                                    borderRadius:
+                                                        BorderRadius.only(
+                                                            topLeft: Radius
+                                                                .circular(10),
+                                                            topRight:
+                                                                Radius.circular(
+                                                                    10)),
+                                                  ),
+                                                ),
+                                          SizedBox(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width /
+                                                1.45,
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          left: 10),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      SizedBox(
+                                                        width: 130,
+                                                        child: Text(
+                                                          '${order.products!.productName}',
+                                                          style:
+                                                              const TextStyle(
+                                                            color: Colors.blue,
+                                                            fontSize: 14,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          const Icon(
+                                                            Icons
+                                                                .date_range_outlined,
+                                                            size: 14,
+                                                            color: Colors.blue,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 5,
+                                                          ),
+                                                          Text(
+                                                            formattedOrderDate,
+                                                            style:
+                                                                const TextStyle(
+                                                              height: 1.8,
+                                                              fontSize: 14,
+                                                              color:
+                                                                  Colors.grey,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(
+                                                                left: 10,
+                                                                right: 10,
+                                                                top: 6,
+                                                                bottom: 6),
+                                                        decoration: BoxDecoration(
+                                                            color: const Color
+                                                                .fromARGB(31,
+                                                                148, 148, 253),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10)),
+                                                        child: Row(
+                                                          children: [
+                                                            Text(
+                                                              '${order.products!.kyat} ကျပ် | ',
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                            Text(
+                                                              '${order.products!.pae} ',
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                            const Text(
+                                                              'ပဲ | ',
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                            Text(
+                                                              '${order.products!.yway} ရွေး ',
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      )
+                                                    ],
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Ks ${formatter.format(order.confirmPrice!)}',
+                                                  style: const TextStyle(
+                                                    height: 1.8,
+                                                    fontSize: 16,
+                                                    color: Colors
+                                                        .blueGrey, // Replace with your desired color
+                                                    fontWeight: FontWeight.w600,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    )
+                  : Container(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Center(
+                            child: Image.asset(
+                              'assets/images/nodata.png',
+                              width: MediaQuery.of(context).size.width / 1.5,
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                          const Text(
+                            'Order Not Found',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
     );
   }
 }

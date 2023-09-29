@@ -10,7 +10,7 @@ class AppConfig {
   // Default Localhost Port ""http://10.0.2.2:8000/api";"
 
   // ignore: constant_identifier_names
-  static const String BASE_URL = "http://172.30.31.19:8000/api";
+  static const String BASE_URL = "http://172.30.31.20:8000/api";
 
   @override
   String toString() {

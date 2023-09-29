@@ -33,7 +33,10 @@ class Order {
         itemId: json['items_id'] ?? 0,
         userId: json['users_id'] ?? 0,
         createAt: json['created_at'] ?? '',
-        products: Product.fromJson(json['items']),
+        products: json['items'] != null
+            ? Product.fromJson(json['items'] as Map<String, dynamic>)
+            : null,
+        // products: Product.fromJson(json['items']),
         // products: (json['items'] as List<dynamic>?)
         //         ?.map((productJson) => Product.fromJson(productJson))
         //         .toList() ??

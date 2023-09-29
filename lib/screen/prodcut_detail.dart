@@ -68,7 +68,7 @@ class _ProductDetailState extends State<ProductDetail> {
                     children: [
                       widget.product.image!.isNotEmpty
                           ? SizedBox(
-                              height: 300,
+                              height: 250,
                               child: CachedNetworkImage(
                                 imageUrl: widget.product.image![0].url ?? '',
                                 fit: BoxFit.fitWidth,

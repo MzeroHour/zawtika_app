@@ -239,16 +239,17 @@ class _HomePageState extends State<HomePage> {
                 Product product = _productItem[index];
                 return Container(
                   decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          offset: const Offset(0, 5),
-                          color: Colors.indigo.withOpacity(0.2),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                        ),
-                      ]),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        offset: const Offset(0, 5),
+                        color: Colors.indigo.withOpacity(0.2),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                      ),
+                    ],
+                  ),
                   child: GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -264,7 +265,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         product.image!.isNotEmpty
                             ? Container(
-                                height: 125,
+                                height: 100,
                                 width: MediaQuery.of(context).size.width,
                                 child: CachedNetworkImage(
                                   imageUrl: product.image![0].url ?? '',
@@ -318,7 +319,10 @@ class _HomePageState extends State<HomePage> {
                           height: 10,
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(left: 10),
+                          padding: const EdgeInsets.only(
+                            left: 10,
+                            right: 10,
+                          ),
                           child: Text(
                             product.productName!,
                             style: const TextStyle(
