@@ -126,8 +126,11 @@ class _MyDrawerState extends State<MyDrawer> {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Settings'),
+            leading: const Icon(
+              FontAwesomeIcons.userAlt,
+              size: 18,
+            ),
+            title: const Text('User Information'),
             onTap: () {
               Navigator.pop(context); // Close the Drawer
             },
@@ -139,7 +142,7 @@ class _MyDrawerState extends State<MyDrawer> {
             ),
             title: const Text('Logout'),
             onTap: () async {
-              Navigator.pop(context);
+              // Navigator.pop(context);
               await AuthRepository().logout();
               // ignore: use_build_context_synchronously
               Navigator.of(context).pushAndRemoveUntil(

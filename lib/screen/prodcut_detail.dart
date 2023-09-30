@@ -421,9 +421,10 @@ class _ProductDetailState extends State<ProductDetail> {
                                             orderList = Order(
                                               confirmPrice: int.parse(
                                                   '${widget.product.price}'),
-                                              status: 1,
+                                              status: 0,
                                               remark: _remarkController.text,
-                                              orgPrice: 0,
+                                              orgPrice: int.parse(
+                                                  '${widget.product.price}'),
                                               itemId: widget.product.id,
                                               userId: userId,
                                             );

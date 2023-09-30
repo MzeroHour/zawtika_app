@@ -25,6 +25,11 @@ class _OrderListScreenState extends State<OrderListScreen> {
   int totalPae = 0;
   int totalYway = 0;
   var formatter = NumberFormat('#,##,000');
+  var _isSelected = false;
+
+  List<int> selectCategory = [];
+  // List<String> categories = ['All Order', 'Complete', 'Pending'];
+  Map<int, String> categoriesName = {0: 'Pending', 1: 'Complete'};
 
   // Get order list
   Future<void> getOrder() async {
@@ -55,7 +60,9 @@ class _OrderListScreenState extends State<OrderListScreen> {
   double calculateTotalPrice() {
     double total = 0.0;
     for (var order in _orderList) {
-      total += double.parse('${order.confirmPrice}');
+      if (order.status == 1) {
+        total += double.parse('${order.confirmPrice}');
+      }
     }
     return total;
   }
@@ -63,7 +70,9 @@ class _OrderListScreenState extends State<OrderListScreen> {
   int calculateTotalKyat() {
     int total = 0;
     for (var order in _orderList) {
-      total += int.parse('${order.products.kyat}');
+      if (order.status == 1) {
+        total += int.parse('${order.products.kyat}');
+      }
     }
     return total;
   }
@@ -71,7 +80,9 @@ class _OrderListScreenState extends State<OrderListScreen> {
   int calculateTotalPae() {
     int total = 0;
     for (var order in _orderList) {
-      total += int.parse('${order.products.pae}');
+      if (order.status == 1) {
+        total += int.parse('${order.products.pae}');
+      }
     }
     return total;
   }
@@ -79,7 +90,9 @@ class _OrderListScreenState extends State<OrderListScreen> {
   int calculateTotalYway() {
     int total = 0;
     for (var order in _orderList) {
-      total += int.parse('${order.products.yway}');
+      if (order.status == 1) {
+        total += int.parse('${order.products.yway}');
+      }
     }
     return total;
   }
@@ -114,12 +127,23 @@ class _OrderListScreenState extends State<OrderListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filterOrders = _orderList.where((order) {
+      return selectCategory.isEmpty || selectCategory.contains(order.status);
+    }).toList();
     return Scaffold(
       appBar: AppBar(
-          elevation: 0.0,
-          title: const Text(
-            'Orders List',
-          )),
+        elevation: 0.0,
+        title: const Text(
+          'Orders List',
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Handle back arrow press if needed
+            Navigator.pop(context);
+          },
+        ),
+      ),
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(),
@@ -127,176 +151,216 @@ class _OrderListScreenState extends State<OrderListScreen> {
           : RefreshIndicator(
               onRefresh: () {
                 setState(() {
-                  getOrder();
+                  getOrder().then((value) {
+                    totalPrice = calculateTotalPrice();
+                    totalKyat = calculateTotalKyat();
+                    totalPae = calculateTotalPae();
+                    totalYway = calculateTotalYway();
+                    // Convert Yway to Pae
+                    int ywayToPae = totalYway ~/ 8;
+                    totalPae += ywayToPae;
+                    totalYway %= 8;
+
+                    // Convert Pae to Kyat
+                    int paeToKyat = totalPae ~/ 16;
+                    totalKyat += paeToKyat;
+                    totalPae %= 16;
+                  });
                 });
                 return getOrder();
               },
-              child: _orderList.isNotEmpty
-                  ? Column(
+              child: Column(
+                children: [
+                  Container(
+                    decoration:
+                        BoxDecoration(color: MyTheme.splash_screen_color),
+                    padding: const EdgeInsets.only(
+                        top: 0, left: 15, right: 15, bottom: 15),
+                    child: Column(
                       children: [
+                        SizedBox(
+                          height: 50,
+                          child: TextField(
+                            style: const TextStyle(
+                              fontSize: 14,
+                            ),
+                            controller: _searchController,
+                            onChanged: (value) {
+                              getOrder();
+                            },
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white,
+                              hintText: 'Search...',
+                              hintStyle: const TextStyle(
+                                height: 4,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  getOrder();
+                                },
+                              ),
+                              prefixIcon: IconButton(
+                                icon: const Icon(Icons.search),
+                                onPressed: () {
+                                  // Perform the search here
+                                },
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20.0),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 15,
+                        ),
                         Container(
-                          decoration:
-                              BoxDecoration(color: MyTheme.splash_screen_color),
-                          padding: const EdgeInsets.only(
-                              top: 0, left: 15, right: 15, bottom: 15),
+                          width: MediaQuery.of(context).size.width,
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                offset: const Offset(0, 5),
+                                color: Colors.indigo.withOpacity(0.2),
+                                spreadRadius: 2,
+                                blurRadius: 5,
+                              ),
+                            ],
+                          ),
                           child: Column(
                             children: [
-                              SizedBox(
-                                height: 50,
-                                child: TextField(
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                  ),
-                                  controller: _searchController,
-                                  onChanged: (value) {
-                                    getOrder();
-                                  },
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    hintText: 'Search...',
-                                    hintStyle: const TextStyle(
-                                      height: 4,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        getOrder();
-                                      },
-                                    ),
-                                    prefixIcon: IconButton(
-                                      icon: const Icon(Icons.search),
-                                      onPressed: () {
-                                        // Perform the search here
-                                      },
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(20.0),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'စာရင်းရှိရွှေ',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                ),
+                                  Text(
+                                    'Ks  ${formatter.format(totalPrice)}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(
-                                height: 15,
+                                height: 10,
                               ),
-                              Container(
-                                width: MediaQuery.of(context).size.width,
-                                padding: const EdgeInsets.all(15),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      offset: const Offset(0, 5),
-                                      color: Colors.indigo.withOpacity(0.2),
-                                      spreadRadius: 2,
-                                      blurRadius: 5,
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 15,
+                                      vertical: 5,
                                     ),
-                                  ],
-                                ),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          'စာရင်းရှိရွှေ',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          'Ks  ${formatter.format(totalPrice)}',
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
+                                    decoration: BoxDecoration(
+                                      color: Colors.deepPurple[500],
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                    const SizedBox(
-                                      height: 10,
+                                    child: Text(
+                                      '$totalKyat ကျပ်',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 15,
-                                            vertical: 5,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.deepPurple[500],
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: Text(
-                                            '$totalKyat ကျပ်',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 15,
-                                            vertical: 5,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.greenAccent[700],
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: Text(
-                                            '$totalPae ပဲ',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 15,
-                                            vertical: 5,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.amber,
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: Text(
-                                            '$totalYway ရွေး',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 15,
+                                      vertical: 5,
                                     ),
-                                  ],
-                                ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.greenAccent[700],
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '$totalPae ပဲ',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 15,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '$totalYway ရွေး',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: _orderList.length,
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                    color: Colors.black12,
+                    child: Row(
+                      children: categoriesName.keys
+                          .map((category) => Padding(
+                                padding: const EdgeInsets.only(right: 10),
+                                child: FilterChip(
+                                    selected: selectCategory.contains(category),
+                                    label: Text(categoriesName[category]!),
+                                    checkmarkColor: Colors.white,
+                                    backgroundColor: Colors.transparent,
+                                    selectedColor: Colors.blue,
+                                    labelStyle: TextStyle(
+                                      color: selectCategory.contains(category)
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        if (selected) {
+                                          selectCategory.add(category);
+                                        } else {
+                                          selectCategory.remove(category);
+                                        }
+                                      });
+                                    }),
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                  Expanded(
+                    child: _orderList.isNotEmpty
+                        ? ListView.builder(
+                            itemCount: filterOrders.length,
                             itemBuilder: (context, index) {
-                              Order order = _orderList[index];
+                              Order order = filterOrders[index];
                               DateTime dateTime =
                                   DateTime.parse(order.createAt!);
                               String formattedOrderDate =
@@ -506,17 +570,77 @@ class _OrderListScreenState extends State<OrderListScreen> {
                                                     ],
                                                   ),
                                                 ),
-                                                Text(
-                                                  'Ks ${formatter.format(order.confirmPrice!)}',
-                                                  style: const TextStyle(
-                                                    height: 1.8,
-                                                    fontSize: 16,
-                                                    color: Colors
-                                                        .blueGrey, // Replace with your desired color
-                                                    fontWeight: FontWeight.w600,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
+                                                Column(
+                                                  children: [
+                                                    Text(
+                                                      'Ks ${formatter.format(order.confirmPrice!)}',
+                                                      style: const TextStyle(
+                                                        height: 1.8,
+                                                        fontSize: 16,
+                                                        color: Colors
+                                                            .blueGrey, // Replace with your desired color
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                    order.status == 1
+                                                        ? Container(
+                                                            margin:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    top: 10),
+                                                            decoration: BoxDecoration(
+                                                                color: Colors
+                                                                    .green,
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            10)),
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .symmetric(
+                                                                    horizontal:
+                                                                        10,
+                                                                    vertical:
+                                                                        5),
+                                                            child: const Text(
+                                                              'Complete',
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                          )
+                                                        : Container(
+                                                            margin:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    top: 10),
+                                                            decoration: BoxDecoration(
+                                                                color: Colors
+                                                                    .amber,
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            10)),
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .symmetric(
+                                                                    horizontal:
+                                                                        10,
+                                                                    vertical:
+                                                                        5),
+                                                            child: const Text(
+                                                              'Pending',
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
@@ -528,30 +652,35 @@ class _OrderListScreenState extends State<OrderListScreen> {
                                 ),
                               );
                             },
-                          ),
-                        ),
-                      ],
-                    )
-                  : Container(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Center(
-                            child: Image.asset(
-                              'assets/images/nodata.png',
-                              width: MediaQuery.of(context).size.width / 1.5,
+                          )
+                        : SingleChildScrollView(
+                            physics: const NeverScrollableScrollPhysics(),
+                            child: Container(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Center(
+                                    child: Image.asset(
+                                      'assets/images/nodata.png',
+                                      width: MediaQuery.of(context).size.width /
+                                          1.5,
+                                    ),
+                                  ),
+                                  const Text(
+                                    'Order Not Found',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          const Text(
-                            'Order Not Found',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }

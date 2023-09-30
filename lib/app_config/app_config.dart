@@ -11,6 +11,7 @@ class AppConfig {
 
   // ignore: constant_identifier_names
   static const String BASE_URL = "http://172.30.31.20:8000/api";
+  // static const String BASE_URL = "https://os.zawtikajewellery.com/api";
 
   @override
   String toString() {
