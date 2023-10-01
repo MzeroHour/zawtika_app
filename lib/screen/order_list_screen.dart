@@ -25,7 +25,6 @@ class _OrderListScreenState extends State<OrderListScreen> {
   int totalPae = 0;
   int totalYway = 0;
   var formatter = NumberFormat('#,##,000');
-  var _isSelected = false;
 
   List<int> selectCategory = [];
   // List<String> categories = ['All Order', 'Complete', 'Pending'];

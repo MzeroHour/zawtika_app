@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zawtika/app_config/my_theme.dart';
 import 'package:zawtika/screen/home_screen.dart';
 import 'package:zawtika/screen/order_list_screen.dart';
+import 'package:zawtika/screen/profile.dart';
 
 import '../../data_model/api_response.dart';
 import '../../data_model/user_model.dart';
@@ -132,7 +133,13 @@ class _MyDrawerState extends State<MyDrawer> {
             ),
             title: const Text('User Information'),
             onTap: () {
-              Navigator.pop(context); // Close the Drawer
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePage(),
+                ),
+              ); // Close the Drawer
             },
           ),
           ListTile(
