@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:zawtika/app_config/my_theme.dart';
-import 'package:zawtika/custom/toast_message.dart';
 import 'package:zawtika/repository/order_repository.dart';
 
 import '../data_model/api_response.dart';
@@ -43,16 +42,19 @@ class _OrderListScreenState extends State<OrderListScreen> {
           orderList.where((orderData) => orderData.userId == userId).toList();
       setState(() {
         _loading = _loading ? !_loading : _loading;
-        if (_searchController.text.isNotEmpty) {
+        if (_searchController.text.toString().isNotEmpty) {
           _orderList = _orderList
               .where((productData) => productData.products.productName
                   .toLowerCase()
                   .contains(_searchController.text.toLowerCase()))
               .toList();
+        } else {
+          _orderList = response.data as List<dynamic>;
         }
       });
     } else {
-      toastMessage('${response.error}', Colors.white, Colors.grey[600]!);
+      print('Error');
+      // toastMessage('${response.error}', Colors.white, Colors.grey[600]!);
     }
   }
 
@@ -185,6 +187,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                             ),
                             controller: _searchController,
                             onChanged: (value) {
+                              _orderList;
                               getOrder();
                             },
                             decoration: InputDecoration(

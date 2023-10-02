@@ -38,6 +38,7 @@ Future<ApiResponse> getOrderAll() async {
     Uri url = Uri.parse("${AppConfig.BASE_URL}/v1/customer-orders");
     final response = await http.get(url, headers: {
       'Accept': 'application/json',
+      'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
       "Connection": "Keep-Alive",
     });
@@ -48,9 +49,13 @@ Future<ApiResponse> getOrderAll() async {
         // print('Fucking Api : $responseData');
         if (responseData != null) {
           if (responseData is List) {
-            apiResponse.data = responseData
-                .map((roderListData) => Order.fromJson(roderListData))
+            // apiResponse.data = responseData
+            //     .map((roderListData) => Order.fromJson(roderListData))
+            //     .toList();
+            List<Order> orders = responseData
+                .map((orderData) => Order.fromJson(orderData))
                 .toList();
+            apiResponse.data = orders;
           } else {
             apiResponse.data = [];
           }

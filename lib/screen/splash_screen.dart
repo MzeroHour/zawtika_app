@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       height: 300,
                       width: 300,
                       child: Image.asset(
-                        "assets/images/logo.png",
+                        "assets/images/logo1.png",
                         filterQuality: FilterQuality.low,
                       ),
                     ),
@@ -79,13 +79,16 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5.0),
-                  child: Text(
-                    AppConfig.app_name,
-                    style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 30.0,
-                        color: Colors.white),
+                  child: Center(
+                    child: Text(
+                      AppConfig.app_name,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 30.0,
+                          color: Colors.white),
+                    ),
                   ),
                 ),
                 Padding(

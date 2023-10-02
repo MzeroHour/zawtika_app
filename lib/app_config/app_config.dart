@@ -4,7 +4,7 @@ class AppConfig {
   static String copyright_text =
       "@ Zawtika " + this_year; //this shows in the splash screen
   static String app_name =
-      "Zawtika Gold Shop"; //this shows in the splash screen
+      "Zawtika Diamond & \n Gold Collection"; //this shows in the splash screen
   static String hologram = 'မြင်သူတိုင်းစိတ်တိုင်းဘဝင်ကျ ရွှေမှာဆိုဇောတိက';
 
   // Default Localhost Port ""http://10.0.2.2:8000/api";"
